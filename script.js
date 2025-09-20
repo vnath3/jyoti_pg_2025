@@ -99,6 +99,214 @@ document.addEventListener('DOMContentLoaded', function () {
     registerCounter('a[href*="wa.me"]', 'whatsapp', 'whatsapp_click');
   }
 
+  const sliderViewport = document.querySelector('.testimonial-viewport');
+  const sliderTrack = sliderViewport ? sliderViewport.querySelector('.testimonial-track') : null;
+  const testimonialCards = sliderTrack ? Array.from(sliderTrack.querySelectorAll('.testimonial-card')) : [];
+
+  if (sliderViewport && testimonialCards.length) {
+    const prevButton = document.querySelector('.testimonial-nav.prev');
+    const nextButton = document.querySelector('.testimonial-nav.next');
+    const dotsHolder = document.querySelector('[data-slider-dots]');
+    const prefersReducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+    const autoDelay = 6500;
+    let dots = [];
+    let activeIndex = 0;
+    let ignoreObserver = false;
+    let resizeTimer;
+    let autoTimerId = null;
+
+    function updateDots() {
+      if (!dots.length) {
+        return;
+      }
+
+      dots.forEach(function (dot, idx) {
+        const isActive = idx === activeIndex;
+        dot.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        dot.tabIndex = isActive ? 0 : -1;
+      });
+    }
+
+    function setActive(index, options) {
+      if (!testimonialCards[index]) {
+        return;
+      }
+
+      activeIndex = index;
+      updateDots();
+
+      if (options && options.skipScroll) {
+        return;
+      }
+
+      ignoreObserver = true;
+      const smooth = !(options && options.instant) && !prefersReducedMotion.matches;
+      const targetOffset = testimonialCards[index].offsetLeft;
+
+      if (typeof sliderViewport.scrollTo === 'function') {
+        sliderViewport.scrollTo({
+          left: targetOffset,
+          behavior: smooth ? 'smooth' : 'auto'
+        });
+      } else {
+        sliderViewport.scrollLeft = targetOffset;
+      }
+
+      window.setTimeout(function () {
+        ignoreObserver = false;
+      }, smooth ? 420 : 0);
+    }
+
+    const moveBy = function (step) {
+      const nextIndex = (activeIndex + step + testimonialCards.length) % testimonialCards.length;
+      setActive(nextIndex);
+    };
+
+    const stopAuto = function () {
+      if (autoTimerId) {
+        window.clearInterval(autoTimerId);
+        autoTimerId = null;
+      }
+    };
+
+    const startAuto = function () {
+      if (prefersReducedMotion.matches) {
+        stopAuto();
+        return;
+      }
+
+      stopAuto();
+      autoTimerId = window.setInterval(function () {
+        moveBy(1);
+      }, autoDelay);
+    };
+
+    if (dotsHolder) {
+      dotsHolder.setAttribute('role', 'tablist');
+      dotsHolder.setAttribute('aria-label', 'Select testimonial');
+      dotsHolder.innerHTML = '';
+
+      dots = testimonialCards.map(function (_card, idx) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.setAttribute('role', 'tab');
+        dot.setAttribute('aria-label', 'Show testimonial ' + (idx + 1));
+
+        dot.addEventListener('click', function () {
+          stopAuto();
+          setActive(idx);
+          startAuto();
+          try {
+            sliderViewport.focus({ preventScroll: true });
+          } catch (error) {
+            sliderViewport.focus();
+          }
+        });
+
+        dot.addEventListener('keydown', function (event) {
+          if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            event.preventDefault();
+            const direction = event.key === 'ArrowRight' ? 1 : -1;
+            const nextIndex = (idx + direction + testimonialCards.length) % testimonialCards.length;
+
+            if (dots[nextIndex]) {
+              dots[nextIndex].focus();
+            }
+
+            stopAuto();
+            setActive(nextIndex);
+            startAuto();
+          }
+        });
+
+        dotsHolder.appendChild(dot);
+        return dot;
+      });
+
+      updateDots();
+    }
+
+    if (prevButton) {
+      prevButton.addEventListener('click', function () {
+        stopAuto();
+        moveBy(-1);
+        startAuto();
+      });
+    }
+
+    if (nextButton) {
+      nextButton.addEventListener('click', function () {
+        stopAuto();
+        moveBy(1);
+        startAuto();
+      });
+    }
+
+    sliderViewport.addEventListener('keydown', function (event) {
+      if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+        event.preventDefault();
+        stopAuto();
+        moveBy(event.key === 'ArrowRight' ? 1 : -1);
+        startAuto();
+      }
+    });
+
+    sliderViewport.addEventListener('pointerenter', stopAuto);
+    sliderViewport.addEventListener('pointerleave', startAuto);
+    sliderViewport.addEventListener('focusin', stopAuto);
+    sliderViewport.addEventListener('focusout', function (event) {
+      if (!sliderViewport.contains(event.relatedTarget)) {
+        startAuto();
+      }
+    });
+
+    if ('IntersectionObserver' in window) {
+      const slideObserver = new IntersectionObserver(function (entries) {
+        if (ignoreObserver) {
+          return;
+        }
+
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            const index = testimonialCards.indexOf(entry.target);
+
+            if (index !== -1 && index !== activeIndex) {
+              activeIndex = index;
+              updateDots();
+            }
+          }
+        });
+      }, { root: sliderViewport, threshold: 0.6 });
+
+      testimonialCards.forEach(function (card) {
+        slideObserver.observe(card);
+      });
+    }
+
+    window.addEventListener('resize', function () {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(function () {
+        setActive(activeIndex, { instant: true });
+      }, 150);
+    });
+
+    const handleMotionPreference = function () {
+      if (prefersReducedMotion.matches) {
+        stopAuto();
+      } else {
+        startAuto();
+      }
+    };
+
+    if (typeof prefersReducedMotion.addEventListener === 'function') {
+      prefersReducedMotion.addEventListener('change', handleMotionPreference);
+    } else if (typeof prefersReducedMotion.addListener === 'function') {
+      prefersReducedMotion.addListener(handleMotionPreference);
+    }
+
+    setActive(0, { skipScroll: true });
+    startAuto();
+  }
   const animatedBlocks = document.querySelectorAll('[data-animate]');
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver(function (entries) {
@@ -136,7 +344,30 @@ document.addEventListener('DOMContentLoaded', function () {
       .addTo(map)
       .bindPopup('<strong>Jyoti Girls PG</strong><br>Near Osmanpura, Chhatrapati Sambhaji Nagar')
       .openPopup();
+
+    const googleMapsUrl = 'https://www.google.com/maps?q=19.8642843,75.3328362';
+    let mapWasDragging = false;
+
+    map.on('dragstart', function () {
+      mapWasDragging = true;
+    });
+
+    map.on('dragend', function () {
+      window.setTimeout(function () {
+        mapWasDragging = false;
+      }, 80);
+    });
+
+    mapContainer.classList.add('map-can-open');
+    mapContainer.addEventListener('click', function (event) {
+      if (mapWasDragging || (event.target && event.target.closest('.leaflet-control'))) {
+        return;
+      }
+
+      window.open(googleMapsUrl, '_blank', 'noopener');
+    });
   }
 });
+
 
 
