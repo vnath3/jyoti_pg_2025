@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const nextButton = document.querySelector('.testimonial-nav.next');
     const dotsHolder = document.querySelector('[data-slider-dots]');
     const prefersReducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-    const autoDelay = 6500;
+    const autoDelay = 2000;
     let dots = [];
     let activeIndex = 0;
     let ignoreObserver = false;
@@ -141,7 +141,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
       ignoreObserver = true;
       const smooth = !(options && options.instant) && !prefersReducedMotion.matches;
-      const targetOffset = testimonialCards[index].offsetLeft;
+      const cardRect = testimonialCards[index].getBoundingClientRect();
+      const viewportRect = sliderViewport.getBoundingClientRect();
+      const targetOffset = sliderViewport.scrollLeft + (cardRect.left - viewportRect.left);
 
       if (typeof sliderViewport.scrollTo === 'function') {
         sliderViewport.scrollTo({
@@ -151,6 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
       } else {
         sliderViewport.scrollLeft = targetOffset;
       }
+
 
       window.setTimeout(function () {
         ignoreObserver = false;
@@ -251,8 +254,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
 
-    sliderViewport.addEventListener('pointerenter', stopAuto);
-    sliderViewport.addEventListener('pointerleave', startAuto);
     sliderViewport.addEventListener('focusin', stopAuto);
     sliderViewport.addEventListener('focusout', function (event) {
       if (!sliderViewport.contains(event.relatedTarget)) {
@@ -368,6 +369,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 });
+
+
+
+
+
 
 
 
