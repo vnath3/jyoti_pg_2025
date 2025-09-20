@@ -820,3 +820,34 @@ textarea {
 }
 }
 \n.leaflet-control-attribution {\n  display: none !important;\n}\n
+.engagement-counters {
+  margin-top: 28px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.counter-item {
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  padding: 16px 20px;
+  min-width: 180px;
+}
+
+.counter-number {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.counter-label {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+

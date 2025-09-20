@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('enquiry-form');
   if (form) {
     const status = form.querySelector('.form-status');
@@ -15,6 +15,88 @@
   const yearHolder = document.querySelector('[data-year]');
   if (yearHolder) {
     yearHolder.textContent = new Date().getFullYear();
+  }
+
+  const counterElements = {
+    visits: document.getElementById('total-visit-count'),
+    calls: document.getElementById('call-count'),
+    whatsapp: document.getElementById('whatsapp-count')
+  };
+
+  if (Object.values(counterElements).some(Boolean)) {
+    // Browser-side counters; swap for a backend service to share totals across visitors.
+    var storageKeys = {
+      visits: 'jyotiPg.visitCount',
+      calls: 'jyotiPg.callCount',
+      whatsapp: 'jyotiPg.whatsappCount'
+    };
+
+    var storageEnabled = true;
+    try {
+      var probeKey = 'jyotiPg.probe';
+      window.localStorage.setItem(probeKey, '1');
+      window.localStorage.removeItem(probeKey);
+    } catch (error) {
+      storageEnabled = false;
+    }
+
+    var counts = {
+      visits: storageEnabled ? parseInt(window.localStorage.getItem(storageKeys.visits), 10) || 0 : 0,
+      calls: storageEnabled ? parseInt(window.localStorage.getItem(storageKeys.calls), 10) || 0 : 0,
+      whatsapp: storageEnabled ? parseInt(window.localStorage.getItem(storageKeys.whatsapp), 10) || 0 : 0
+    };
+
+    var formatCount = function (value) {
+      return new Intl.NumberFormat('en-IN').format(Math.max(value, 0));
+    };
+
+    var persist = function (key) {
+      if (storageEnabled) {
+        window.localStorage.setItem(storageKeys[key], String(counts[key]));
+      }
+    };
+
+    var updateDisplay = function (key) {
+      var holder = counterElements[key];
+      if (holder) {
+        holder.textContent = formatCount(counts[key]);
+      }
+    };
+
+    if (counterElements.visits) {
+      counts.visits += 1;
+      persist('visits');
+      updateDisplay('visits');
+    }
+
+    ['calls', 'whatsapp'].forEach(function (key) {
+      if (counterElements[key]) {
+        updateDisplay(key);
+      }
+    });
+
+    var sendAnalyticsEvent = function (name, label) {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', name, {
+          event_category: 'engagement',
+          event_label: label
+        });
+      }
+    };
+
+    var registerCounter = function (selector, key, eventName) {
+      document.querySelectorAll(selector).forEach(function (link) {
+        link.addEventListener('click', function () {
+          counts[key] += 1;
+          persist(key);
+          updateDisplay(key);
+          sendAnalyticsEvent(eventName, link.getAttribute('href') || eventName);
+        });
+      });
+    };
+
+    registerCounter('a[href^="tel:"]', 'calls', 'call_click');
+    registerCounter('a[href*="wa.me"]', 'whatsapp', 'whatsapp_click');
   }
 
   const animatedBlocks = document.querySelectorAll('[data-animate]');
@@ -56,4 +138,5 @@
       .openPopup();
   }
 });
+
 
