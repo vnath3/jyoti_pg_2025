@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const nextButton = document.querySelector('.testimonial-nav.next');
     const dotsHolder = document.querySelector('[data-slider-dots]');
     const prefersReducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
-    const autoDelay = 2000;
+    const autoDelay = 5000;
     let dots = [];
     let activeIndex = 0;
     let ignoreObserver = false;
