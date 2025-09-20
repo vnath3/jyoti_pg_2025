@@ -1,0 +1,292 @@
+import React from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Phone, MapPin, Star, ShieldCheck, MessageSquare, Utensils } from "lucide-react";
+
+// Jyoti PG Mockup — Website Redesign with Transitions & New Features
+// - Hero section with background + animated heading
+// - Feature highlights with smooth transitions
+// - Gallery slider (placeholder)
+// - Testimonials with animation
+// - Mess section with food details
+// - About (SEO content slot)
+// - FAQ (SEO + UX)
+// - Enquiry form for leads
+// - Location section with embedded map
+// - Sticky CTA footer with WhatsApp & Call buttons
+// - JSON-LD for LocalBusiness + FAQPage
+
+const JyotiPGMockup = () => {
+  return (
+    <div className="font-sans text-gray-800">
+      {/* Hero Section */}
+      <section className="relative h-[80vh] flex items-center justify-center bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="text-center px-4"
+        >
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            Safe & Comfortable Girls PG in Sambhaji Nagar
+          </h1>
+          <p className="text-lg md:text-xl mb-6">
+            Walking distance to JEE & NEET classes. Homely care, modern amenities.
+          </p>
+          <Button size="lg" className="bg-yellow-400 text-black font-semibold">
+            Book Your Bed Now
+          </Button>
+        </motion.div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-12 px-6 md:px-16 grid md:grid-cols-3 gap-8 text-center">
+        {[
+          { icon: <ShieldCheck className="w-10 h-10 mx-auto text-green-500" />, title: "Safety First", desc: "24x7 security & safe environment" },
+          { icon: <MapPin className="w-10 h-10 mx-auto text-red-500" />, title: "Prime Location", desc: "Near top coaching institutes & transport" },
+          { icon: <Star className="w-10 h-10 mx-auto text-yellow-500" />, title: "Comfort Living", desc: "AC rooms, WiFi, homely food" },
+        ].map((f, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.2 }}
+          >
+            <Card className="shadow-lg rounded-2xl">
+              <CardContent className="p-6">
+                {f.icon}
+                <h3 className="text-xl font-semibold mt-3">{f.title}</h3>
+                <p className="text-gray-600 mt-2">{f.desc}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </section>
+
+      {/* Gallery Section */}
+      <section className="py-12 bg-gray-100 text-center">
+        <h2 className="text-3xl font-bold mb-6">Our PG Gallery</h2>
+        <p className="mb-8">(Carousel of room & facility images can be placed here)</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((img) => (
+            <div
+              key={img}
+              className="bg-gray-300 h-40 rounded-lg animate-pulse"
+            ></div>
+          ))}
+        </div>
+      </section>
+
+      {/* Mess Section */}
+      <section className="py-12 px-6 md:px-16 text-center bg-white">
+        <h2 className="text-3xl font-bold mb-8">Healthy & Hygienic Mess</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { icon: <Utensils className="w-8 h-8 mx-auto text-orange-500" />, title: "Nutritious Meals", desc: "Balanced vegetarian meals prepared daily." },
+            { icon: <Utensils className="w-8 h-8 mx-auto text-pink-500" />, title: "Hygiene First", desc: "Clean kitchen & fresh ingredients used." },
+            { icon: <Utensils className="w-8 h-8 mx-auto text-blue-500" />, title: "Variety", desc: "Weekly rotating menu to avoid monotony." },
+          ].map((m, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.2 }}
+              className="bg-gray-50 rounded-2xl shadow-md p-6"
+            >
+              {m.icon}
+              <h3 className="text-xl font-semibold mt-3">{m.title}</h3>
+              <p className="text-gray-600 mt-2">{m.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* About (SEO Content Slot) */}
+      <section className="py-12 px-6 md:px-16 max-w-4xl mx-auto">
+        <h2 className="text-3xl font-bold mb-4">About Jyoti Girls PG</h2>
+        <p className="text-gray-700 leading-relaxed mb-4">
+          {/* Replace this paragraph with your existing SEO content (500–700 words is ideal). */}
+          Jyoti Girls PG is a homely, secure and student-friendly paying guest accommodation in
+          Chhatrapati Sambhaji Nagar (Aurangabad). Located near Osmanpura and walking distance from
+          major JEE & NEET coaching hubs, we provide comfortable rooms, hygienic food and a quiet
+          study environment for aspirants and working professionals. Our facilities include high-speed
+          Wi‑Fi, laundry assistance, regular housekeeping, and 24×7 support.
+        </p>
+        <h3 className="text-2xl font-semibold mt-6 mb-3">Why Our Location Helps Students</h3>
+        <p className="text-gray-700 leading-relaxed">
+          Being close to Deogiri College, major coaching institutes, and public transport saves daily
+          commute time and improves consistency. Access to libraries, stationery, and healthy food
+          options make it easier to focus on studies. {/* Add area landmarks & distance keywords here. */}
+        </p>
+      </section>
+
+      {/* FAQ (accordion) */}
+      <section className="py-12 px-6 md:px-16 max-w-4xl mx-auto">
+        <h2 className="text-3xl font-bold mb-6">Frequently Asked Questions</h2>
+        <div className="space-y-4">
+          {[
+            {
+              q: "What are the room types and charges?",
+              a: "We offer double and triple sharing rooms. Pricing depends on room type and amenities. Contact us for current offers.",
+            },
+            {
+              q: "Is food included?",
+              a: "Yes, we provide a hygienic vegetarian mess with a rotating weekly menu (breakfast, lunch, dinner).",
+            },
+            {
+              q: "How far is the PG from coaching centers?",
+              a: "Most coaching centers are within a short walking distance or a quick shared auto ride.",
+            },
+            {
+              q: "What safety measures are in place?",
+              a: "We have 24×7 supervision, secure entry, and strict visitor policies for resident safety.",
+            },
+            {
+              q: "How do I book a bed?",
+              a: "Call or WhatsApp us using the sticky buttons, or fill out the enquiry form below.",
+            },
+          ].map((item, idx) => (
+            <details key={idx} className="group bg-white rounded-xl shadow p-4">
+              <summary className="cursor-pointer font-semibold text-lg flex justify-between items-center">
+                {item.q}
+                <span className="ml-4 text-indigo-600">+</span>
+              </summary>
+              <p className="mt-2 text-gray-700 leading-relaxed">{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* Enquiry Form */}
+      <section className="py-12 px-6 md:px-16 max-w-2xl mx-auto bg-gray-50 rounded-2xl shadow-md">
+        <h2 className="text-3xl font-bold mb-6 text-center">Enquire Now</h2>
+        <form className="space-y-4">
+          <input type="text" placeholder="Your Name" className="w-full border rounded-lg p-3" required />
+          <input type="tel" placeholder="Phone Number" className="w-full border rounded-lg p-3" required />
+          <select className="w-full border rounded-lg p-3" required>
+            <option value="">Select Room Type</option>
+            <option value="double">Double Sharing</option>
+            <option value="triple">Triple Sharing</option>
+          </select>
+          <select className="w-full border rounded-lg p-3" required>
+            <option value="">Preferred Intake Month</option>
+            <option>June</option>
+            <option>July</option>
+            <option>August</option>
+          </select>
+          <textarea placeholder="Any Message" className="w-full border rounded-lg p-3" rows={3}></textarea>
+          <Button type="submit" className="w-full bg-indigo-600 text-white font-semibold">
+            Submit Enquiry
+          </Button>
+        </form>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-12 px-6 md:px-16 text-center">
+        <h2 className="text-3xl font-bold mb-8">What Students Say</h2>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white shadow-lg rounded-2xl p-6 max-w-xl mx-auto"
+        >
+          <p className="italic text-gray-700">
+            “Staying at Jyoti PG feels just like home. The food is hygienic and the
+            environment is very supportive for studies.”
+          </p>
+          <h4 className="mt-4 font-semibold">— Priya, NEET Student</h4>
+        </motion.div>
+      </section>
+
+      {/* Location Section */}
+      <section className="py-12 px-6 md:px-16 text-center bg-gray-50">
+        <h2 className="text-3xl font-bold mb-6">Find Us</h2>
+        <p className="mb-4 text-gray-600">
+          Jyoti Girls PG, Near Osmanpura, Chhatrapati Sambhaji Nagar, Maharashtra
+        </p>
+        <div className="w-full h-80 rounded-lg overflow-hidden shadow-lg">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3768.123456789!2d75.34321!3d19.87654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bdb99f123456789%3AJyotiGirlsPG!5e0!3m2!1sen!2sin!4v1692899999999"
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            allowFullScreen=""
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          ></iframe>
+        </div>
+      </section>
+
+      {/* Sticky CTA Footer */}
+      <div className="fixed bottom-0 w-full bg-indigo-700 text-white flex justify-around py-3 shadow-lg">
+        <a
+          href="tel:+919876543210"
+          className="flex items-center space-x-2"
+        >
+          <Phone className="w-5 h-5" /> <span>Call Now</span>
+        </a>
+        <a
+          href="https://wa.me/919876543210"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center space-x-2"
+        >
+          <MessageSquare className="w-5 h-5" /> <span>WhatsApp Us</span>
+        </a>
+      </div>
+
+      {/* JSON-LD Structured Data */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Jyoti Girls PG",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Near Osmanpura",
+          "addressLocality": "Chhatrapati Sambhaji Nagar",
+          "addressRegion": "Maharashtra",
+          "addressCountry": "IN"
+        },
+        "telephone": "+919876543210",
+        "servesCuisine": "Vegetarian",
+        "url": "https://jyotipg.netlify.app",
+        "sameAs": ["https://wa.me/919876543210"]
+      }) }} />
+
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What are the room types and charges?",
+            "acceptedAnswer": { "@type": "Answer", "text": "We offer double and triple sharing rooms. Pricing depends on room type and amenities." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is food included?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes, we provide a hygienic vegetarian mess with a rotating weekly menu (breakfast, lunch, dinner)." }
+          },
+          {
+            "@type": "Question",
+            "name": "How far is the PG from coaching centers?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Most coaching centers are within a short walking distance or a quick shared auto ride." }
+          },
+          {
+            "@type": "Question",
+            "name": "What safety measures are in place?",
+            "acceptedAnswer": { "@type": "Answer", "text": "We have 24×7 supervision, secure entry, and strict visitor policies for resident safety." }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I book a bed?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Call or WhatsApp us using the sticky buttons, or fill out the enquiry form." }
+          }
+        ]
+      }) }} />
+    </div>
+  );
+};
+
+export default JyotiPGMockup;
