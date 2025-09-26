@@ -18,7 +18,8 @@
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
 
-    gtag('config', 'G-SXSYJDQKX6');
+    const debugMode = window.location.search.includes('debug_mode=1');
+    gtag('config', 'G-SXSYJDQKX6', { debug_mode: debugMode });
   </script>
   <link rel="stylesheet" href="styles.css">
 </head>
