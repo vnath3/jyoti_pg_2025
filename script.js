@@ -17,6 +17,68 @@ document.addEventListener('DOMContentLoaded', function () {
     yearHolder.textContent = new Date().getFullYear();
   }
 
+  const navToggle = document.querySelector('.nav-toggle');
+  const navDrawer = document.getElementById('nav-drawer');
+  if (navToggle && navDrawer) {
+    const navOverlay = navDrawer.querySelector('[data-nav-overlay]');
+    const navClose = navDrawer.querySelector('.nav-close');
+    const navDrawerPanel = navDrawer.querySelector('.nav-drawer-panel');
+    const navDrawerLinks = Array.from(navDrawer.querySelectorAll('a'));
+
+    const setNavState = function (open) {
+      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      navDrawer.classList.toggle('is-open', open);
+      navDrawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+      document.body.classList.toggle('nav-open', open);
+    };
+
+    const closeNav = function () {
+      setNavState(false);
+    };
+
+    navToggle.addEventListener('click', function () {
+      const willOpen = navToggle.getAttribute('aria-expanded') !== 'true';
+      setNavState(willOpen);
+    });
+
+    if (navClose) {
+      navClose.addEventListener('click', closeNav);
+    }
+
+    if (navOverlay) {
+      navOverlay.addEventListener('click', closeNav);
+    }
+
+    navDrawerLinks.forEach(function (link) {
+      link.addEventListener('click', closeNav);
+    });
+
+    window.addEventListener('resize', function () {
+      if (window.innerWidth >= 900) {
+        closeNav();
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        closeNav();
+      }
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!navDrawer.classList.contains('is-open')) {
+        return;
+      }
+
+      const clickedToggle = navToggle.contains(event.target);
+      const clickedInsidePanel = navDrawerPanel && navDrawerPanel.contains(event.target);
+
+      if (!clickedToggle && !clickedInsidePanel) {
+        closeNav();
+      }
+    }, true);
+  }
+
   const counterElements = {
     visits: document.getElementById('total-visit-count'),
     calls: document.getElementById('call-count'),
