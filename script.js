@@ -17,6 +17,10 @@ document.addEventListener('DOMContentLoaded', function () {
     yearHolder.textContent = new Date().getFullYear();
   }
 
+  const prefersReducedMotion = window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)')
+    : { matches: false };
+
   const navToggle = document.querySelector('.nav-toggle');
   const navDrawer = document.getElementById('nav-drawer');
   if (navToggle && navDrawer) {
@@ -169,7 +173,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const prevButton = document.querySelector('.testimonial-nav.prev');
     const nextButton = document.querySelector('.testimonial-nav.next');
     const dotsHolder = document.querySelector('[data-slider-dots]');
-    const prefersReducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
     const autoDelay = 5000;
     let dots = [];
     let activeIndex = 0;
@@ -388,6 +391,96 @@ document.addEventListener('DOMContentLoaded', function () {
     animatedBlocks.forEach(function (block) {
       block.classList.add('animate-in');
     });
+  }
+
+  const parallaxItems = Array.from(document.querySelectorAll('[data-parallax]'));
+  if (parallaxItems.length) {
+    const getStrength = function (element) {
+      const value = element.getAttribute('data-parallax');
+      const parsed = parseFloat(value);
+      return Number.isNaN(parsed) ? 16 : parsed;
+    };
+
+    const resetParallax = function () {
+      parallaxItems.forEach(function (item) {
+        item.style.setProperty('--parallax-offset', '0px');
+      });
+    };
+
+    let ticking = false;
+    let listenersAttached = false;
+
+    const updateParallax = function () {
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+      parallaxItems.forEach(function (item) {
+        const strength = getStrength(item);
+        if (!strength) {
+          item.style.setProperty('--parallax-offset', '0px');
+          return;
+        }
+
+        const rect = item.getBoundingClientRect();
+        const elementCenter = rect.top + rect.height / 2;
+        const offsetRatio = (elementCenter - viewportHeight / 2) / viewportHeight;
+        const translate = Math.max(Math.min(offsetRatio * strength, Math.abs(strength)), -Math.abs(strength));
+
+        item.style.setProperty('--parallax-offset', translate.toFixed(2) + 'px');
+      });
+
+      ticking = false;
+    };
+
+    const requestTick = function () {
+      if (!ticking) {
+        ticking = true;
+        window.requestAnimationFrame(updateParallax);
+      }
+    };
+
+    const attachListeners = function () {
+      if (listenersAttached) {
+        requestTick();
+        return;
+      }
+
+      window.addEventListener('scroll', requestTick, { passive: true });
+      window.addEventListener('resize', requestTick);
+      listenersAttached = true;
+      requestTick();
+    };
+
+    const detachListeners = function () {
+      if (!listenersAttached) {
+        resetParallax();
+        return;
+      }
+
+      window.removeEventListener('scroll', requestTick);
+      window.removeEventListener('resize', requestTick);
+      listenersAttached = false;
+      resetParallax();
+    };
+
+    if (prefersReducedMotion.matches) {
+      resetParallax();
+    } else {
+      attachListeners();
+    }
+
+    const handleParallaxPreference = function (event) {
+      if (event.matches) {
+        detachListeners();
+      } else {
+        attachListeners();
+      }
+    };
+
+    if (typeof prefersReducedMotion.addEventListener === 'function') {
+      prefersReducedMotion.addEventListener('change', handleParallaxPreference);
+    } else if (typeof prefersReducedMotion.addListener === 'function') {
+      prefersReducedMotion.addListener(handleParallaxPreference);
+    }
   }
 
   const mapContainer = document.getElementById('pg-map');
