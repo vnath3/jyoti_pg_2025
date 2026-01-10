@@ -96,6 +96,7 @@
           learning environment.
         </p>
         <div class="hero-actions">
+          <button class="btn-primary" id="openLeadModalBtn" type="button">Check Availability</button>
           <a class="btn-secondary" href="#gallery">Explore the PG</a>
         </div>
         <div class="trust-badges">
@@ -652,6 +653,156 @@
     <a href="tel:+919922333305">Call Now</a>
     <a href="https://wa.me/919922333305?text=Hello%20Jyoti%20Girls%20PG%2C%20I%27m%20interested%20in%20booking%20a%20bed.%20Could%20you%20please%20share%20availability%20and%20pricing%20details%3F"
       target="_blank" rel="noopener noreferrer">WhatsApp</a>
+  </div>
+
+  <div class="modal-overlay" id="leadModalOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lead-modal-title"
+      aria-describedby="lead-modal-subtitle">
+      <button class="modal-close" type="button" data-modal-close aria-label="Close">&times;</button>
+      <div class="modal-header">
+        <p class="eyebrow modal-eyebrow">Admissions</p>
+        <h2 id="lead-modal-title">Check Availability</h2>
+        <p class="lead modal-lead" id="lead-modal-subtitle">Share a few details and we will confirm availability.</p>
+      </div>
+      <div class="modal-tabs" role="tablist">
+        <button class="modal-tab is-active" type="button" role="tab" aria-selected="true"
+          aria-controls="lead-panel-availability" id="lead-tab-availability" data-tab="availability">Availability</button>
+        <button class="modal-tab" type="button" role="tab" aria-selected="false" aria-controls="lead-panel-visit"
+          id="lead-tab-visit" data-tab="visit">Schedule Visit</button>
+      </div>
+      <div class="modal-panels">
+        <section class="modal-panel is-active" id="lead-panel-availability" role="tabpanel"
+          aria-labelledby="lead-tab-availability" data-panel="availability">
+          <form class="lead-form" id="leadFormAvailability" data-form-key="pg_check_availability" novalidate>
+            <div class="form-grid">
+              <label class="form-field">
+                <span>Phone Number *</span>
+                <input type="tel" name="phone" placeholder="+91 98xxxxxx90" required>
+              </label>
+              <label class="form-field">
+                <span>Purpose *</span>
+                <select name="purpose" required>
+                  <option value="college">College</option>
+                  <option value="job">Job</option>
+                  <option value="internship">Internship</option>
+                  <option value="coaching">Coaching</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>Joining Month *</span>
+                <select name="joining_month" data-month-select required></select>
+              </label>
+              <label class="form-field">
+                <span>Name (Optional)</span>
+                <input type="text" name="name" placeholder="Student or parent name">
+              </label>
+              <label class="form-field">
+                <span>Home City (Optional)</span>
+                <input type="text" name="home_city" placeholder="Nanded, Beed, Jalna, Nashik">
+              </label>
+              <label class="form-field">
+                <span>College / Company (Optional)</span>
+                <input type="text" name="institution_name" placeholder="Deogiri College / Company">
+              </label>
+              <label class="form-field">
+                <span>Decision Maker (Optional)</span>
+                <select name="decision_maker">
+                  <option value="">Select</option>
+                  <option value="student">Student</option>
+                  <option value="parent">Parent</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>Budget Range (Optional)</span>
+                <select name="budget_range">
+                  <option value="">Select</option>
+                  <option value="lt_5k">Below 5k</option>
+                  <option value="5k_7k">5k - 7k</option>
+                  <option value="7k_plus">7k+</option>
+                </select>
+              </label>
+            </div>
+            <p class="form-consent">By submitting, you agree to be contacted via WhatsApp/call.</p>
+            <p class="form-error" data-error role="alert"></p>
+            <button class="btn-primary full" type="submit" data-submit>Submit</button>
+          </form>
+        </section>
+        <section class="modal-panel" id="lead-panel-visit" role="tabpanel" aria-labelledby="lead-tab-visit"
+          data-panel="visit" hidden>
+          <form class="lead-form" id="leadFormVisit" data-form-key="pg_schedule_visit" novalidate>
+            <div class="form-grid">
+              <label class="form-field">
+                <span>Phone Number *</span>
+                <input type="tel" name="phone" placeholder="+91 98xxxxxx90" required>
+              </label>
+              <label class="form-field">
+                <span>Purpose *</span>
+                <select name="purpose" required>
+                  <option value="college">College</option>
+                  <option value="job">Job</option>
+                  <option value="internship">Internship</option>
+                  <option value="coaching">Coaching</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>Joining Month *</span>
+                <select name="joining_month" data-month-select required></select>
+              </label>
+              <label class="form-field">
+                <span>Name (Optional)</span>
+                <input type="text" name="name" placeholder="Student or parent name">
+              </label>
+              <label class="form-field">
+                <span>Home City (Optional)</span>
+                <input type="text" name="home_city" placeholder="Nanded, Beed, Jalna, Nashik">
+              </label>
+              <label class="form-field">
+                <span>College / Company (Optional)</span>
+                <input type="text" name="institution_name" placeholder="Deogiri College / Company">
+              </label>
+              <label class="form-field">
+                <span>Decision Maker (Optional)</span>
+                <select name="decision_maker">
+                  <option value="">Select</option>
+                  <option value="student">Student</option>
+                  <option value="parent">Parent</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>Budget Range (Optional)</span>
+                <select name="budget_range">
+                  <option value="">Select</option>
+                  <option value="lt_5k">Below 5k</option>
+                  <option value="5k_7k">5k - 7k</option>
+                  <option value="7k_plus">7k+</option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>Preferred Date (Optional)</span>
+                <input type="date" name="preferred_date">
+              </label>
+              <label class="form-field">
+                <span>Preferred Time (Optional)</span>
+                <input type="time" name="preferred_time">
+              </label>
+            </div>
+            <p class="form-consent">By submitting, you agree to be contacted via WhatsApp/call.</p>
+            <p class="form-error" data-error role="alert"></p>
+            <button class="btn-primary full" type="submit" data-submit>Submit</button>
+          </form>
+        </section>
+      </div>
+      <div class="modal-success" id="leadModalSuccess" hidden>
+        <h3>Thanks! We'll message you shortly.</h3>
+        <p>Our admissions team will reply with availability and next steps.</p>
+        <a class="btn-primary full" id="openWhatsAppAfterSubmit" href="#" target="_blank"
+          rel="noopener noreferrer">Open WhatsApp</a>
+      </div>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>

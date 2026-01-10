@@ -1,4 +1,100 @@
+const PG_ORG_ID = 'e3b8d287-4e82-4a62-8d7c-825e091c87a9';
+const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const UTM_STORAGE_KEY = 'jyotiPg.utm';
+const UTM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+
+const parseUtmFromUrl = function () {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  const params = new URLSearchParams(window.location.search || '');
+  const utm = {};
+  let found = false;
+
+  UTM_KEYS.forEach(function (key) {
+    const value = params.get(key);
+    if (value) {
+      utm[key] = value;
+      found = true;
+    }
+  });
+
+  return found ? utm : null;
+};
+
+const storeUtm = function (utm) {
+  if (!utm || typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify({
+      values: utm,
+      storedAt: Date.now()
+    }));
+  } catch (error) {
+    // Ignore storage errors.
+  }
+};
+
+const getUtm = function () {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+
+  try {
+    const raw = window.localStorage.getItem(UTM_STORAGE_KEY);
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.values || !parsed.storedAt) {
+      return {};
+    }
+
+    if (Date.now() - parsed.storedAt > UTM_TTL_MS) {
+      window.localStorage.removeItem(UTM_STORAGE_KEY);
+      return {};
+    }
+
+    return parsed.values;
+  } catch (error) {
+    return {};
+  }
+};
+
+const normalizeIndianPhone = function (value) {
+  if (!value) {
+    return '';
+  }
+
+  var digits = String(value).replace(/\D/g, '');
+  if (digits.length === 12 && digits.indexOf('91') === 0) {
+    digits = digits.slice(2);
+  }
+  if (digits.length === 11 && digits.indexOf('0') === 0) {
+    digits = digits.slice(1);
+  }
+  if (digits.length !== 10) {
+    return '';
+  }
+  return digits;
+};
+
 document.addEventListener('DOMContentLoaded', function () {
+  const utmFromUrl = parseUtmFromUrl();
+  if (utmFromUrl) {
+    storeUtm(utmFromUrl);
+  }
+
+  const sendGtagEvent = function (eventName, params) {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, params || {});
+    }
+  };
   const form = document.getElementById('enquiry-form');
   if (form) {
     const status = form.querySelector('.form-status');
@@ -81,6 +177,344 @@ document.addEventListener('DOMContentLoaded', function () {
         closeNav();
       }
     }, true);
+  }
+
+  const stickyWhatsApp = document.querySelector('.sticky-cta a[href*="wa.me"]');
+  if (stickyWhatsApp) {
+    stickyWhatsApp.addEventListener('click', function () {
+      sendGtagEvent('cta_whatsapp_click', { placement: 'sticky' });
+    });
+  }
+
+  const leadModalOverlay = document.getElementById('leadModalOverlay');
+  const openLeadModalBtn = document.getElementById('openLeadModalBtn');
+
+  if (leadModalOverlay && openLeadModalBtn) {
+    const modalCloseBtn = leadModalOverlay.querySelector('[data-modal-close]');
+    const modalTabs = Array.from(leadModalOverlay.querySelectorAll('[data-tab]'));
+    const modalPanels = Array.from(leadModalOverlay.querySelectorAll('[data-panel]'));
+    const modalTabsWrapper = leadModalOverlay.querySelector('.modal-tabs');
+    const modalPanelsWrapper = leadModalOverlay.querySelector('.modal-panels');
+    const modalSuccess = leadModalOverlay.querySelector('#leadModalSuccess');
+    const modalTitle = leadModalOverlay.querySelector('#lead-modal-title');
+    const modalSubtitle = leadModalOverlay.querySelector('#lead-modal-subtitle');
+    const whatsappAfterSubmit = leadModalOverlay.querySelector('#openWhatsAppAfterSubmit');
+    const leadForms = Array.from(leadModalOverlay.querySelectorAll('.lead-form'));
+
+    const tabCopy = {
+      availability: {
+        title: 'Check Availability',
+        subtitle: 'Share a few details and we will confirm availability.'
+      },
+      visit: {
+        title: 'Schedule Visit',
+        subtitle: 'Pick a preferred date and time for a quick tour.'
+      }
+    };
+
+    const setActiveTab = function (key) {
+      modalTabs.forEach(function (tab) {
+        const isActive = tab.dataset.tab === key;
+        tab.classList.toggle('is-active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      modalPanels.forEach(function (panel) {
+        const isActive = panel.dataset.panel === key;
+        panel.classList.toggle('is-active', isActive);
+        panel.hidden = !isActive;
+      });
+
+      if (tabCopy[key]) {
+        if (modalTitle) {
+          modalTitle.textContent = tabCopy[key].title;
+        }
+        if (modalSubtitle) {
+          modalSubtitle.textContent = tabCopy[key].subtitle;
+        }
+      }
+    };
+
+    const resetLeadModal = function () {
+      if (modalTabsWrapper) {
+        modalTabsWrapper.classList.remove('is-hidden');
+      }
+      if (modalPanelsWrapper) {
+        modalPanelsWrapper.classList.remove('is-hidden');
+      }
+      if (modalSuccess) {
+        modalSuccess.hidden = true;
+      }
+      leadForms.forEach(function (form) {
+        form.reset();
+        const error = form.querySelector('[data-error]');
+        const phoneInput = form.querySelector('input[name="phone"]');
+        if (error) {
+          error.textContent = '';
+          error.classList.remove('is-visible');
+        }
+        if (phoneInput) {
+          phoneInput.classList.remove('is-invalid');
+        }
+        setSubmitState(form, false);
+      });
+      setActiveTab('availability');
+    };
+
+    const openLeadModal = function () {
+      resetLeadModal();
+      leadModalOverlay.classList.add('is-open');
+      leadModalOverlay.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+      const firstInput = leadModalOverlay.querySelector('[data-panel="availability"] input');
+      if (firstInput) {
+        firstInput.focus();
+      }
+    };
+
+    const closeLeadModal = function () {
+      leadModalOverlay.classList.remove('is-open');
+      leadModalOverlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+    };
+
+    const setSubmitState = function (form, isSubmitting) {
+      const submitButton = form.querySelector('[data-submit]');
+      if (!submitButton) {
+        return;
+      }
+      if (isSubmitting) {
+        if (!submitButton.dataset.defaultText) {
+          submitButton.dataset.defaultText = submitButton.textContent;
+        }
+        submitButton.textContent = 'Submitting...';
+        submitButton.disabled = true;
+        submitButton.classList.add('is-loading');
+      } else {
+        submitButton.textContent = submitButton.dataset.defaultText || submitButton.textContent;
+        submitButton.disabled = false;
+        submitButton.classList.remove('is-loading');
+      }
+    };
+
+    const setFormError = function (form, message) {
+      const error = form.querySelector('[data-error]');
+      if (error) {
+        error.textContent = message;
+        error.classList.add('is-visible');
+      }
+    };
+
+    const clearFormError = function (form) {
+      const error = form.querySelector('[data-error]');
+      if (error) {
+        error.textContent = '';
+        error.classList.remove('is-visible');
+      }
+    };
+
+    const buildPayload = function (form) {
+      const formData = new FormData(form);
+      const rawPhone = formData.get('phone');
+      const normalizedPhone = normalizeIndianPhone(rawPhone);
+      const purpose = String(formData.get('purpose') || '').trim();
+      const joiningMonth = String(formData.get('joining_month') || '').trim();
+
+      if (!normalizedPhone) {
+        const phoneInput = form.querySelector('input[name="phone"]');
+        if (phoneInput) {
+          phoneInput.classList.add('is-invalid');
+          phoneInput.focus();
+        }
+        setFormError(form, 'Please enter a valid 10-digit Indian mobile number.');
+        return null;
+      }
+
+      if (!purpose || !joiningMonth) {
+        setFormError(form, 'Please complete the required fields.');
+        return null;
+      }
+
+      const payload = {
+        phone: normalizedPhone,
+        purpose: purpose,
+        joining_month: joiningMonth
+      };
+
+      ['name', 'home_city', 'institution_name', 'decision_maker', 'budget_range', 'preferred_date', 'preferred_time']
+        .forEach(function (key) {
+          const value = String(formData.get(key) || '').trim();
+          if (value) {
+            payload[key] = value;
+          }
+        });
+
+      return payload;
+    };
+
+    const buildWhatsAppUrl = function (payload) {
+      const utm = getUtm();
+      const utmSource = utm.utm_source || 'direct';
+      const utmCampaign = utm.utm_campaign || 'na';
+      const messageParts = [
+        'Hi, I want details for Jyoti PG.',
+        'Phone: ' + payload.phone + '.',
+        'Purpose: ' + payload.purpose + '.',
+        'Joining: ' + payload.joining_month + '.'
+      ];
+
+      if (payload.home_city) {
+        messageParts.push('City: ' + payload.home_city + '.');
+      }
+      if (payload.institution_name) {
+        messageParts.push('College/Job: ' + payload.institution_name + '.');
+      }
+
+      messageParts.push('Source: website.');
+      messageParts.push('UTM: ' + utmSource + '/' + utmCampaign);
+
+      const message = messageParts.join(' ');
+      return 'https://wa.me/919922333305?text=' + encodeURIComponent(message);
+    };
+
+    const showSuccessState = function (payload, formKey) {
+      if (modalTabsWrapper) {
+        modalTabsWrapper.classList.add('is-hidden');
+      }
+      if (modalPanelsWrapper) {
+        modalPanelsWrapper.classList.add('is-hidden');
+      }
+      if (modalSuccess) {
+        modalSuccess.hidden = false;
+      }
+      if (whatsappAfterSubmit) {
+        whatsappAfterSubmit.href = buildWhatsAppUrl(payload);
+      }
+      sendGtagEvent('lead_form_submit_success', { form_key: formKey, vertical: 'pg' });
+    };
+
+    const submitLeadForm = function (event) {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const formKey = form.getAttribute('data-form-key') || 'pg_check_availability';
+      clearFormError(form);
+      const payload = buildPayload(form);
+      if (!payload) {
+        return;
+      }
+
+      setSubmitState(form, true);
+
+      const submission = [{
+        org_id: PG_ORG_ID,
+        vertical: 'pg',
+        form_key: formKey,
+        source: 'web',
+        payload: payload,
+        utm: getUtm(),
+        landing_path: window.location.pathname,
+        created_ip: null,
+        status: 'new'
+      }];
+
+      fetch(SUPABASE_URL + '/rest/v1/intake_submissions', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        },
+        body: JSON.stringify(submission)
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error('http_error');
+          }
+          return response.json();
+        })
+        .then(function () {
+          showSuccessState(payload, formKey);
+        })
+        .catch(function (error) {
+          const reason = error && error.message === 'http_error' ? 'http_error' : 'network_error';
+          setFormError(form, 'Sorry, something went wrong. Please try again or WhatsApp us.');
+          sendGtagEvent('lead_form_submit_fail', { form_key: formKey, reason: reason });
+        })
+        .finally(function () {
+          setSubmitState(form, false);
+        });
+    };
+
+    const populateJoiningMonths = function () {
+      const selects = Array.from(leadModalOverlay.querySelectorAll('[data-month-select]'));
+      if (!selects.length) {
+        return;
+      }
+
+      const months = [];
+      const now = new Date();
+
+      for (var i = 0; i < 7; i += 1) {
+        const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        const label = date.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+        months.push(label);
+      }
+
+      selects.forEach(function (select) {
+        select.innerHTML = '';
+        months.forEach(function (label) {
+          const option = document.createElement('option');
+          option.value = label;
+          option.textContent = label;
+          select.appendChild(option);
+        });
+      });
+    };
+
+    populateJoiningMonths();
+    setActiveTab('availability');
+
+    openLeadModalBtn.addEventListener('click', function () {
+      sendGtagEvent('cta_check_availability_click', { placement: 'hero' });
+      openLeadModal();
+    });
+
+    if (modalCloseBtn) {
+      modalCloseBtn.addEventListener('click', closeLeadModal);
+    }
+
+    leadModalOverlay.addEventListener('click', function (event) {
+      if (event.target === leadModalOverlay) {
+        closeLeadModal();
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && leadModalOverlay.classList.contains('is-open')) {
+        closeLeadModal();
+      }
+    });
+
+    modalTabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        const key = tab.dataset.tab;
+        if (key) {
+          setActiveTab(key);
+        }
+      });
+    });
+
+    leadForms.forEach(function (form) {
+      form.addEventListener('submit', submitLeadForm);
+      const phoneInput = form.querySelector('input[name="phone"]');
+      if (phoneInput) {
+        phoneInput.addEventListener('input', function () {
+          phoneInput.classList.remove('is-invalid');
+          clearFormError(form);
+        });
+      }
+    });
   }
 
   const counterElements = {
