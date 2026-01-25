@@ -1546,6 +1546,10 @@ select.is-invalid {
     padding-bottom: 126px;
   }
 
+  .container {
+    padding: 0 16px;
+  }
+
   .top-bar-inner {
     flex-direction: column;
     gap: 10px;
@@ -1557,6 +1561,102 @@ select.is-invalid {
     align-items: center;
     gap: 12px;
     padding: 12px 0;
+  }
+
+  .brand-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .brand-name {
+    font-size: 1rem;
+  }
+
+  .brand-tagline {
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+  }
+
+  .hero {
+    min-height: 70vh;
+  }
+
+  .hero-content {
+    text-align: center;
+    padding: 72px 0 64px;
+    margin: 0 auto;
+  }
+
+  .lead {
+    font-size: 1.05rem;
+    margin-bottom: 24px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-actions .btn-primary,
+  .hero-actions .btn-secondary {
+    width: 100%;
+  }
+
+  .trust-badges {
+    justify-content: center;
+  }
+
+  .trust-badges span {
+    font-size: 0.85rem;
+  }
+
+  .section {
+    padding: 56px 0;
+  }
+
+  .section-subtitle {
+    margin: 10px auto 26px;
+  }
+
+  .card-grid,
+  .gallery-grid,
+  .value-columns {
+    gap: 16px;
+  }
+
+  .card-grid,
+  .gallery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .value-columns ul {
+    padding: 16px 18px;
+  }
+
+  .testimonials-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .testimonial-card {
+    padding: 22px;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+  }
+
+  .modal {
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 85vh;
+    padding: 22px 20px 24px;
   }
 }
 \n.leaflet-control-attribution {\n  display: none !important;\n}\n
