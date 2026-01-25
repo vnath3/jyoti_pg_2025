@@ -43,7 +43,8 @@ exports.handler = async function (event) {
 
   const outboundPayload = Object.assign({}, payload, {
     identity_type: 'slug',
-    identity_value: tenantSlug
+    identity_value: tenantSlug,
+    tenant_slug: tenantSlug
   });
 
   if (!outboundPayload.source) {
