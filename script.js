@@ -1,9 +1,14 @@
-const PG_ORG_ID = 'e3b8d287-4e82-4a62-8d7c-825e091c87a9';
-const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const DEFAULT_LEAD_SUBMIT_URL = '/.netlify/functions/submit-lead';
+const LEAD_SUBMIT_URL = typeof window !== 'undefined' && window.LEAD_SUBMIT_URL
+  ? window.LEAD_SUBMIT_URL
+  : DEFAULT_LEAD_SUBMIT_URL;
+const LEAD_IDENTITY_TYPE = 'slug';
+const LEAD_IDENTITY_VALUE = 'jyoti-pg';
+const LEAD_SOURCE = 'jyotipg_marketing';
 const UTM_STORAGE_KEY = 'jyotiPg.utm';
 const UTM_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+
 
 const parseUtmFromUrl = function () {
   if (typeof window === 'undefined') {
@@ -248,14 +253,13 @@ document.addEventListener('DOMContentLoaded', function () {
       leadForms.forEach(function (form) {
         form.reset();
         const error = form.querySelector('[data-error]');
-        const phoneInput = form.querySelector('input[name="phone"]');
         if (error) {
           error.textContent = '';
           error.classList.remove('is-visible');
         }
-        if (phoneInput) {
-          phoneInput.classList.remove('is-invalid');
-        }
+        Array.from(form.querySelectorAll('.is-invalid')).forEach(function (input) {
+          input.classList.remove('is-invalid');
+        });
         setSubmitState(form, false);
       });
       setActiveTab('availability');
@@ -315,13 +319,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const buildPayload = function (form) {
       const formData = new FormData(form);
+      const raw = {};
+
+      formData.forEach(function (value, key) {
+        const trimmed = String(value || '').trim();
+        if (trimmed) {
+          raw[key] = trimmed;
+        }
+      });
+
+      const fullName = String(formData.get('full_name') || '').trim();
       const rawPhone = formData.get('phone');
       const normalizedPhone = normalizeIndianPhone(rawPhone);
-      const purpose = String(formData.get('purpose') || '').trim();
-      const joiningMonth = String(formData.get('joining_month') || '').trim();
+      const email = String(formData.get('email') || '').trim();
+      const course = String(formData.get('course') || '').trim();
+      const moveInDate = String(formData.get('move_in_date') || '').trim();
+      const message = String(formData.get('message') || '').trim();
+
+      const fullNameInput = form.querySelector('input[name="full_name"]');
+      const phoneInput = form.querySelector('input[name="phone"]');
+
+      if (!fullName) {
+        if (fullNameInput) {
+          fullNameInput.classList.add('is-invalid');
+          fullNameInput.focus();
+        }
+        setFormError(form, 'Please enter your full name.');
+        return null;
+      }
 
       if (!normalizedPhone) {
-        const phoneInput = form.querySelector('input[name="phone"]');
         if (phoneInput) {
           phoneInput.classList.add('is-invalid');
           phoneInput.focus();
@@ -330,44 +357,81 @@ document.addEventListener('DOMContentLoaded', function () {
         return null;
       }
 
-      if (!purpose || !joiningMonth) {
-        setFormError(form, 'Please complete the required fields.');
-        return null;
-      }
-
-      const payload = {
-        phone: normalizedPhone,
-        purpose: purpose,
-        joining_month: joiningMonth
+      const contact = {
+        full_name: fullName,
+        phone: normalizedPhone
       };
 
-      ['name', 'home_city', 'institution_name', 'decision_maker', 'budget_range', 'preferred_date', 'preferred_time']
-        .forEach(function (key) {
-          const value = String(formData.get(key) || '').trim();
-          if (value) {
-            payload[key] = value;
-          }
-        });
+      if (email) {
+        contact.email = email;
+      }
+      if (course) {
+        contact.course = course;
+      }
+      if (moveInDate) {
+        contact.move_in_date = moveInDate;
+      }
+      if (message) {
+        contact.message = message;
+      }
 
-      return payload;
+      const utm = getUtm();
+      const utmSource = utm.utm_source || 'direct';
+      const utmMedium = utm.utm_medium || 'organic';
+      const utmCampaign = utm.utm_campaign || 'organic';
+
+      const formPayload = Object.assign({}, raw, {
+        page_url: window.location.href,
+        utm_source: utmSource,
+        utm_medium: utmMedium,
+        utm_campaign: utmCampaign
+      });
+
+      if (utm.utm_content) {
+        formPayload.utm_content = utm.utm_content;
+      }
+      if (utm.utm_term) {
+        formPayload.utm_term = utm.utm_term;
+      }
+
+      return {
+        identity_type: LEAD_IDENTITY_TYPE,
+        identity_value: LEAD_IDENTITY_VALUE,
+        contact: contact,
+        form_payload: formPayload,
+        source: LEAD_SOURCE,
+        campaign: utmCampaign || 'organic'
+      };
     };
 
     const buildWhatsAppUrl = function (payload) {
-      const utm = getUtm();
-      const utmSource = utm.utm_source || 'direct';
-      const utmCampaign = utm.utm_campaign || 'na';
+      const contact = payload && payload.contact ? payload.contact : {};
+      const formPayload = payload && payload.form_payload ? payload.form_payload : {};
+      const utmSource = formPayload.utm_source || 'direct';
+      const utmCampaign = formPayload.utm_campaign || 'organic';
       const messageParts = [
         'Hi, I want details for Jyoti PG.',
-        'Phone: ' + payload.phone + '.',
-        'Purpose: ' + payload.purpose + '.',
-        'Joining: ' + payload.joining_month + '.'
+        'Name: ' + (contact.full_name || 'NA') + '.',
+        'Phone: ' + (contact.phone || 'NA') + '.'
       ];
 
-      if (payload.home_city) {
-        messageParts.push('City: ' + payload.home_city + '.');
+      if (contact.course) {
+        messageParts.push('Course: ' + contact.course + '.');
       }
-      if (payload.institution_name) {
-        messageParts.push('College/Job: ' + payload.institution_name + '.');
+      if (contact.move_in_date) {
+        messageParts.push('Move-in: ' + contact.move_in_date + '.');
+      }
+      if (formPayload.enquiry_type) {
+        messageParts.push('Enquiry: ' + formPayload.enquiry_type + '.');
+      }
+      if (formPayload.preferred_date) {
+        messageParts.push('Visit date: ' + formPayload.preferred_date + '.');
+      }
+      if (formPayload.preferred_time) {
+        messageParts.push('Visit time: ' + formPayload.preferred_time + '.');
+      }
+      if (contact.message) {
+        messageParts.push('Message: ' + contact.message + '.');
       }
 
       messageParts.push('Source: website.');
@@ -405,33 +469,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
       setSubmitState(form, true);
 
-      const submission = [{
-        org_id: PG_ORG_ID,
-        vertical: 'pg',
-        form_key: formKey,
-        source: 'web',
-        payload: payload,
-        utm: getUtm(),
-        landing_path: window.location.pathname,
-        created_ip: null,
-        status: 'new'
-      }];
-
-      fetch(SUPABASE_URL + '/rest/v1/intake_submissions', {
+      fetch(LEAD_SUBMIT_URL, {
         method: 'POST',
         headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=representation'
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify(submission)
+        body: JSON.stringify(payload)
       })
         .then(function (response) {
           if (!response.ok) {
             throw new Error('http_error');
           }
-          return response.json();
+          return response;
         })
         .then(function () {
           showSuccessState(payload, formKey);
@@ -446,33 +495,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-    const populateJoiningMonths = function () {
-      const selects = Array.from(leadModalOverlay.querySelectorAll('[data-month-select]'));
-      if (!selects.length) {
-        return;
-      }
-
-      const months = [];
-      const now = new Date();
-
-      for (var i = 0; i < 7; i += 1) {
-        const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
-        const label = date.toLocaleString('en-IN', { month: 'long', year: 'numeric' });
-        months.push(label);
-      }
-
-      selects.forEach(function (select) {
-        select.innerHTML = '';
-        months.forEach(function (label) {
-          const option = document.createElement('option');
-          option.value = label;
-          option.textContent = label;
-          select.appendChild(option);
-        });
-      });
-    };
-
-    populateJoiningMonths();
     setActiveTab('availability');
 
     openLeadModalBtn.addEventListener('click', function () {
@@ -507,13 +529,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     leadForms.forEach(function (form) {
       form.addEventListener('submit', submitLeadForm);
-      const phoneInput = form.querySelector('input[name="phone"]');
-      if (phoneInput) {
-        phoneInput.addEventListener('input', function () {
-          phoneInput.classList.remove('is-invalid');
+      ['full_name', 'phone'].forEach(function (fieldName) {
+        const input = form.querySelector('input[name="' + fieldName + '"]');
+        if (!input) {
+          return;
+        }
+        input.addEventListener('input', function () {
+          input.classList.remove('is-invalid');
           clearFormError(form);
         });
-      }
+      });
     });
   }
 
