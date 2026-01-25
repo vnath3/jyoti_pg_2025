@@ -26,6 +26,17 @@ exports.handler = async function (event) {
 
   const submitUrl = process.env.UNI_LEADS_SUBMIT_URL || 'https://uni-leads.netlify.app/api/lead-submit';
   const tenantSlug = process.env.UNI_LEADS_TENANT_SLUG || 'jyoti-pg';
+  const debugLogs = process.env.LEAD_DEBUG_LOGS === '1';
+
+  const maskSensitive = function (value) {
+    if (!value || typeof value !== 'string') {
+      return value;
+    }
+    if (value.length <= 4) {
+      return '****';
+    }
+    return value.slice(0, 2) + '****' + value.slice(-2);
+  };
 
   let payload = {};
   try {
@@ -55,16 +66,44 @@ exports.handler = async function (event) {
     outboundPayload.campaign = 'organic';
   }
 
+  if (!outboundPayload.form_payload) {
+    outboundPayload.form_payload = {};
+  }
+
+  if (!outboundPayload.form_payload.tenant_slug) {
+    outboundPayload.form_payload.tenant_slug = tenantSlug;
+  }
+
+  if (debugLogs) {
+    const safePayload = JSON.parse(JSON.stringify(outboundPayload));
+    if (safePayload.contact && safePayload.contact.phone) {
+      safePayload.contact.phone = maskSensitive(String(safePayload.contact.phone));
+    }
+    console.log('lead-submit debug payload', safePayload);
+    console.log('lead-submit debug config', {
+      submitUrl: submitUrl,
+      tenantSlug: tenantSlug
+    });
+  }
+
   try {
     const response = await fetch(submitUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Tenant-Slug': tenantSlug
       },
       body: JSON.stringify(outboundPayload)
     });
 
     const responseText = await response.text();
+
+    if (debugLogs) {
+      console.log('lead-submit upstream response', {
+        status: response.status,
+        body: responseText
+      });
+    }
 
     return {
       statusCode: response.status,
