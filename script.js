@@ -206,16 +206,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const whatsappAfterSubmit = leadModalOverlay.querySelector('#openWhatsAppAfterSubmit');
     const leadForms = Array.from(leadModalOverlay.querySelectorAll('.lead-form'));
 
-    const tabCopy = {
-      availability: {
-        title: 'Check Availability',
-        subtitle: 'Share a few details and we will confirm availability.'
-      },
-      visit: {
-        title: 'Schedule Visit',
-        subtitle: 'Pick a preferred date and time for a quick tour.'
-      }
-    };
+      const tabCopy = {
+        availability: {
+          title: 'Check Availability',
+          subtitle: 'Share your name and number to confirm availability.'
+        },
+        visit: {
+          title: 'Schedule Visit',
+          subtitle: 'Share your name and number so we can arrange a visit.'
+        }
+      };
 
     const setActiveTab = function (key) {
       modalTabs.forEach(function (tab) {
@@ -331,11 +331,6 @@ document.addEventListener('DOMContentLoaded', function () {
       const fullName = String(formData.get('full_name') || '').trim();
       const rawPhone = formData.get('phone');
       const normalizedPhone = normalizeIndianPhone(rawPhone);
-      const email = String(formData.get('email') || '').trim();
-      const course = String(formData.get('course') || '').trim();
-      const moveInDate = String(formData.get('move_in_date') || '').trim();
-      const message = String(formData.get('message') || '').trim();
-
       const fullNameInput = form.querySelector('input[name="full_name"]');
       const phoneInput = form.querySelector('input[name="phone"]');
 
@@ -361,19 +356,6 @@ document.addEventListener('DOMContentLoaded', function () {
         full_name: fullName,
         phone: normalizedPhone
       };
-
-      if (email) {
-        contact.email = email;
-      }
-      if (course) {
-        contact.course = course;
-      }
-      if (moveInDate) {
-        contact.move_in_date = moveInDate;
-      }
-      if (message) {
-        contact.message = message;
-      }
 
       const utm = getUtm();
       const utmSource = utm.utm_source || 'direct';
@@ -415,23 +397,8 @@ document.addEventListener('DOMContentLoaded', function () {
         'Phone: ' + (contact.phone || 'NA') + '.'
       ];
 
-      if (contact.course) {
-        messageParts.push('Course: ' + contact.course + '.');
-      }
-      if (contact.move_in_date) {
-        messageParts.push('Move-in: ' + contact.move_in_date + '.');
-      }
       if (formPayload.enquiry_type) {
         messageParts.push('Enquiry: ' + formPayload.enquiry_type + '.');
-      }
-      if (formPayload.preferred_date) {
-        messageParts.push('Visit date: ' + formPayload.preferred_date + '.');
-      }
-      if (formPayload.preferred_time) {
-        messageParts.push('Visit time: ' + formPayload.preferred_time + '.');
-      }
-      if (contact.message) {
-        messageParts.push('Message: ' + contact.message + '.');
       }
 
       messageParts.push('Source: website.');
@@ -469,6 +436,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
       setSubmitState(form, true);
 
+      const extractErrorMessage = function (rawText) {
+        if (!rawText) {
+          return '';
+        }
+        try {
+          const parsed = JSON.parse(rawText);
+          return parsed.message || parsed.error || '';
+        } catch (error) {
+          return rawText;
+        }
+      };
+
       fetch(LEAD_SUBMIT_URL, {
         method: 'POST',
         headers: {
@@ -478,16 +457,27 @@ document.addEventListener('DOMContentLoaded', function () {
       })
         .then(function (response) {
           if (!response.ok) {
-            throw new Error('http_error');
+            return response.text().then(function (text) {
+              const errorMessage = extractErrorMessage(text);
+              const error = new Error(errorMessage || 'http_error');
+              error.responseText = text;
+              throw error;
+            });
           }
-          return response;
+          return response.text();
         })
         .then(function () {
           showSuccessState(payload, formKey);
         })
         .catch(function (error) {
           const reason = error && error.message === 'http_error' ? 'http_error' : 'network_error';
-          setFormError(form, 'Sorry, something went wrong. Please try again or WhatsApp us.');
+          const detail = error && error.message && error.message !== 'http_error'
+            ? ' (' + error.message + ')'
+            : '';
+          setFormError(form, 'Sorry, something went wrong. Please try again or WhatsApp us.' + detail);
+          if (error && error.responseText) {
+            console.error('Lead submission failed:', error.responseText);
+          }
           sendGtagEvent('lead_form_submit_fail', { form_key: formKey, reason: reason });
         })
         .finally(function () {
